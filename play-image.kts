@@ -109,10 +109,15 @@ val minValue: Int = values.minOrNull()!!
 val maxValue: Int = values.maxOrNull()!!
 val waveformMedianValue: Int = maxValue - minValue
 values.forEach { v ->
+    // calculate how far this sample is from the median of the waveform
     val v2: Double = (v - minValue).toDouble() / waveformMedianValue.toDouble() * 255;
 
+    // calculate values in interpolation between lower and upper bound to perform the
+    // time-stretch, by using a step-function and taking in account previous sample for smoothing
     for (x in 0 until TIME_STRETCH_RATE) {
-        val v3: Double = x / TIME_STRETCH_RATE.toDouble() * v2 + (1 - x / TIME_STRETCH_RATE.toDouble()) * lastV2;
+        val stepForTimeStretch = x / TIME_STRETCH_RATE.toDouble()
+        val distanceFromPreviousSampleMedian = (1 - stepForTimeStretch) * lastV2
+        val v3: Double = stepForTimeStretch * v2 + distanceFromPreviousSampleMedian;
         outputStream.write(byteArrayOf(v3.toUInt().toByte()), 0, 1);
     }
 
